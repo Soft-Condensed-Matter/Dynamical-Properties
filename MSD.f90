@@ -57,7 +57,7 @@ PROGRAM MSD
  DTIME=H*DBLE(OUTNSAM)                      !TIME CORRELATION
  TMAX=INT(TOBS/DTIME)                       !MAXIMUM TIME INSTANTS OBSERVED
  NSAMP=40001                                !NUMBER OF SAMPLES
- NPART=2048                                 !NUMBER OF MOLECULES
+ NPART=2048                                 !NUMBER OF PARTICLES
 
  DO I=1,TMAX                                !ARRAYS TIME INITIALIZATION 
     NTIME(I)=0
@@ -67,7 +67,7 @@ PROGRAM MSD
     MSDZ(I)=0.0D0
  ENDDO
 
- DO K=1,NSAMP                               !STATISTICS AROUN THE TOTAL SAMPLES
+ DO K=1,NSAMP                               !STATISTICS OVER THE TOTAL SAMPLES
     READ(10,*)ISAM                          !NUMBER OF SAMPLE
     DO I=1,NPART
        READ(10,*)RX(I),RY(I),RZ(I)          !POSITION AT TIME t_{i}
@@ -75,7 +75,7 @@ PROGRAM MSD
 !
     NTEL=NTEL+1                             !UPDATE NUMBER OF t=0
     IF(MOD(NTEL,IT0) .EQ. 0)THEN
-      T0=T0+1                               !n-TH t=0 
+      T0=T0+1                               !n-th t=0 
       TT0=MOD(T0-1,T0MAX) + 1               !RESET t=0 IF MAXIMUM NUMBER IS REACHED
       TIME0(TT0)=NTEL
 
@@ -87,7 +87,7 @@ PROGRAM MSD
     ENDIF
  
     DO T=1,MIN(T0,T0MAX)                    !PERFORMS CORRELATION UP TO T0
-       DELT=NTEL -TIME0(T) + 1              !OBSERVED t_{I}
+       DELT=NTEL -TIME0(T) + 1              !OBSERVED t_{i}
        IF(DELT .LT. TMAX)THEN
           NTIME(DELT)=NTIME(DELT) + 1
           DO I=1,NPART                      !CORRELATION WITH POSITIONS AT TIME t_{i}
