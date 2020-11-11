@@ -11,3 +11,10 @@ of N particles contained in the required file MDFps.dat. It is necessary to spec
 the total number of particles and samples within the MDFps.dat file before to compile
 the program.
 
+Code: FSelf.f90
+
+Description: Determines the self part of the intermediate scattering function (FSelf.dat)
+of N particles contained in the required file MDFps.dat. It is necessary to specify 
+the total number of particles and samples within the MDFps.dat file before to compile
+the program.
+
