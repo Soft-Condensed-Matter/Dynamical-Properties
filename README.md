@@ -27,3 +27,12 @@ particles contained in the required file MDVel.dat. It is necessary to specify
 the total number of particles and samples within the MDVel.dat file before to compile
 the program.
 
+
+Code: SSCF.f90
+
+Description: Determines the total shear-stress autocorrelation function (TSSCF.dat),
+the kynetic (KSSCF.dat), potential contribution (PSSCF.dat) and kynetic-potential 
+(KPSSCF.dat) contributions of the shear-stress autocorrelation. The program requeries
+the instant components given in the files MDTend.dat, MDKtn.dat, MDPtn.dat with the
+total, kynetic and potential components, respectively. The number of samples within 
+the input files must be provided previously.
