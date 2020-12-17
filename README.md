@@ -44,3 +44,19 @@ Description: Computes the shear-viscocity and its kynetic, potential and
 kynetic-potential contributions using the corresponding autocorrelations functions
 given by total shear-stress (TSSCF.dat), kynetic (KSSCF.dat), potential (PSSCF.dat)
 and kynetic-potential functions (KPSSCF.dat)
+
+
+Code: PFACF.f90
+
+Description: Determines the pressure fluctuation autocorrelation function and the 
+same correlation of the diagonal tensor pressure component using the file with all 
+the components of the tensor pressure given in the file MDTen.dat. The number of 
+samples within the input files must be provided previously.
+
+Code: BViscocity.f90
+
+Description: Determines the bulk viscocity from the autocorrelation function of 
+the pressure fluctuation by means of the Green-Kubo relation and the longitudal 
+viscocity using the fluctuation of the diagonal tensor pressure components. The
+program requieres the autoccorelation functions given in the files PFACF.dat and
+PFACaa.dat, respectively. 
