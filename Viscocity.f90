@@ -1,0 +1,388 @@
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%**  PROGRAM    VISCOCITY - DETERMINATION FROM THE GREEN-KUBO RELATION    **%%
+!%%**  AUTHOR     ALEXIS TORRES CARBAJAL                                    **%%
+!%%**  LICENSE    LGPL-V3                                                   **%%
+!%%**  DATE       DECEMBER 16, 2020                                         **%%
+!%%**                                                                       **%% 
+!%%**  OBS        THIS PROGRAM DETERMINES THE SHEAR VISCOCITY AS WELL AS    **%%
+!%%**             THEIR KYNETIC, POTENTIAL AND KYNETIC-POTENTIAL CONTRIBS.  **%%
+!%%**             THE PROGRAM REQUIERES THE INPUT FILES WITH THE SHEAR      **%%
+!%%**             STREES AUTOCORRELATION FUNCTIONS WITH TOTAL (TPSSCF.dat), **%%
+!%%**             KYNETIC (KSSCF.dat), POTENTIAL (PSSCF.dat) AND KYNETIC-   **%%
+!%%**             POTENTIAL (KPSSCF.dat) CORRELATION FUNCTIONS, RESPECTIVELY**%%
+!%%**                                                                       **%% 
+!%%**             IT IS NECESSARY TO SPECIFIED THE NUMBER OF DATA (NDAT)    **%% 
+!%%**             RELATED WITH THE TIME INSTANTS IN THE CORRELATION, THE    **%% 
+!%%**             NUMBER OF PARTICLES AND THE VOLUME FRACTION               **%%
+!%%**                                                                       **%%
+!%%**             THE GREEN-KUBO INTEGRAL IS PERFORMED WITH THE SIMPLE      **%%
+!%%**             SIMPSON RULE                                              **%%
+!%%**                                                                       **%%
+!%%**             THE AVERAGE IS ENHACED AVERAGING ALL THE OFF-DIAGONAL     **%%
+!%%**             CORRELATIONS                                              **%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+MODULE VISVAR 
+ IMPLICIT NONE
+ INTEGER, PARAMETER:: D     = KIND(1.0D0)   !VARIABLES PRECISION
+ INTEGER, PARAMETER:: NDATX = 5000          !MAXIMUM NUMBER OF DATA
+ 
+ REAL(D), PARAMETER:: PI    = DACOS(-1.0D0) !PI NUMBER
+
+ INTEGER:: NPART,I,NDAT
+
+ REAL(D):: KPTXY(NDATX),KPTXZ(NDATX),KPTYX(NDATX),KPTYZ(NDATX),KPTZX(NDATX),KPTZY(NDATX)
+ REAL(D):: KTXY(NDATX),KTXZ(NDATX),KTYX(NDATX),KTYZ(NDATX),KTZX(NDATX),KTZY(NDATX)
+ REAL(D):: PTXY(NDATX),PTXZ(NDATX),PTYX(NDATX),PTYZ(NDATX),PTZX(NDATX),PTZY(NDATX)
+ REAL(D):: TXY(NDATX),TXZ(NDATX),TYX(NDATX),TYZ(NDATX),TZX(NDATX),TZY(NDATX)
+
+ REAL(D):: TIME(NDATX),DUMMY,PHI
+ REAL(D):: RHOSTAR,TSTAR
+
+ REAL(D):: KPVISCXY,KPVISCXZ,KPVISCYX,KPVISCYZ,KPVISCZX,KPVISCZY
+ REAL(D):: KVISCXY,KVISCXZ,KVISCYX,KVISCYZ,KVISCZX,KVISCZY
+ REAL(D):: PVISCXY,PVISCXZ,PVISCYX,PVISCYZ,PVISCZX,PVISCZY
+ REAL(D):: TVISCXY,TVISCXZ,TVISCYX,TVISCYZ,TVISCZX,TVISCZY
+
+ REAL(D):: TTVISC,KKVISC,PPVISC,KKPPVISC
+ REAL(D):: DX,XYI0,XYI1,XYI2,INTXY
+ REAL(D):: XZI0,XZI1,XZI2,INTXZ
+ REAL(D):: YXI0,YXI1,YXI2,INTYX
+ REAL(D):: YZI0,YZI1,YZI2,INTYZ
+ REAL(D):: ZXI0,ZXI1,ZXI2,INTZX
+ REAL(D):: ZYI0,ZYI1,ZYI2,INTZY
+END MODULE VISVAR 
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%   MAIN PROGRAM   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+PROGRAM VISCOCITY
+ USE VISVAR
+ IMPLICIT NONE
+
+ OPEN(UNIT=10,FILE='TSSCF.dat',STATUS='OLD')
+ OPEN(UNIT=11,FILE='KSSCF.dat',STATUS='OLD')
+ OPEN(UNIT=12,FILE='PSSCF.dat',STATUS='OLD')
+ OPEN(UNIT=13,FILE='KPSSCF.dat',STATUS='OLD')
+ REWIND(10)
+ REWIND(11)
+ REWIND(12)
+ REWIND(13)
+
+ NDAT=1999                                  !NUMBER OF TIME INSTANT 
+ TSTAR=1.4737D0                             !SYSTEM TEMPERATURE
+ NPART=500                                  !SYSTEM NUMBER OF PARTICLES
+ PHI=0.10D0                                 !VOLUME FRACTION
+ RHOSTAR=6.0D0*PHI/PI                       !SYSTEM NUMBER DENSITY
+
+ DO I=1,NDAT                                !READ TIME CORRELATION COMPONENTS
+    READ(10,*)TIME(I),DUMMY,TXY(I),TXZ(I),TYX(I),DUMMY,TYZ(I),TZX(I),TZY(I),DUMMY
+    READ(11,*)DUMMY,DUMMY,KTXY(I),KTXZ(I),KTYX(I),DUMMY,KTYZ(I),KTZX(I),KTZY(I),DUMMY
+    READ(12,*)DUMMY,DUMMY,PTXY(I),PTXZ(I),PTYX(I),DUMMY,PTYZ(I),PTZX(I),PTZY(I),DUMMY
+    READ(13,*)DUMMY,DUMMY,KPTXY(I),KPTXZ(I),KPTYX(I),DUMMY,KPTYZ(I),KPTZX(I),KPTZY(I),DUMMY
+ ENDDO
+
+ CALL TVISC                                !SHEAR-VISCOCITY
+ CALL KVISC                                !KINETYC SHEAR-VISCOCITY 
+ CALL PVISC                                !POTENTIAL SHEAR-VISCOCITY 
+ CALL KPVISC                               !KINETYC-POTENTILA SHEAR-VISCOCITY 
+
+ WRITE(6,*)PHI,TTVISC,KKVISC,PPVISC,KKPPVISC
+
+ CLOSE(UNIT=10)
+ CLOSE(UNIT=11)
+ CLOSE(UNIT=12)
+ CLOSE(UNIT=13)
+
+ STOP
+END PROGRAM VISCOCITY
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%   SUBROUTINES   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SUBROUTINE TVISC
+ USE VISVAR
+ IMPLICIT NONE 
+
+ DX=TIME(2)-TIME(1)
+ XYI0=TXY(1) + TXY(NDAT)                    !FOR XY INTEGRAL
+ XYI1=0.0D0
+ XYI2=0.0D0
+
+ XZI0=TXZ(1) + TXZ(NDAT)                    !FOR XZ INTEGRAL
+ XZI1=0.0D0
+ XZI2=0.0D0
+
+ YXI0=TYX(1) + TYX(NDAT)                    !FOR YX INTEGRAL
+ YXI1=0.0D0
+ YXI2=0.0D0
+
+ YZI0=TYZ(1) + TYZ(NDAT)                    !FOR YZ INTEGRAL
+ YZI1=0.0D0
+ YZI2=0.0D0
+
+ ZXI0=TZX(1) + TZX(NDAT)                    !FOR ZX INTEGRAL
+ ZXI1=0.0D0
+ ZXI2=0.0D0
+
+ ZYI0=TZY(1) + TZY(NDAT)                    !FOR ZY INTEGRAL
+ ZYI1=0.0D0
+ ZYI2=0.0D0
+
+ DO I=2,NDAT-2
+    IF(MOD(I,2) .EQ. 0)THEN
+      XYI1=XYI1 + TXY(I)
+      XZI1=XZI1 + TXZ(I)
+
+      YXI1=YXI1 + TYX(I)
+      YZI1=YZI1 + TYZ(I)
+
+      ZXI1=ZXI1 + TZX(I)
+      ZYI1=ZYI1 + TZY(I)
+    ELSE
+      XYI2=XYI2 + TXY(I)
+      XZI2=XZI2 + TXZ(I)
+
+      YXI2=YXI2 + TYX(I)
+      YZI2=YZI2 + TYZ(I)
+
+      ZXI2=ZXI2 + TZX(I)
+      ZYI2=ZYI2 + TZY(I)
+    ENDIF
+ ENDDO
+
+ INTXY=DX*(XYI0 + 2.0D0*XYI1 + 4.0D0*XYI2)/3.0D0
+ INTXZ=DX*(XZI0 + 2.0D0*XZI1 + 4.0D0*XZI2)/3.0D0
+
+ INTYX=DX*(YXI0 + 2.0D0*YXI1 + 4.0D0*YXI2)/3.0D0
+ INTYZ=DX*(YZI0 + 2.0D0*YZI1 + 4.0D0*YZI2)/3.0D0
+
+ INTZX=DX*(ZXI0 + 2.0D0*ZXI1 + 4.0D0*ZXI2)/3.0D0
+ INTZY=DX*(ZYI0 + 2.0D0*ZYI1 + 4.0D0*ZYI2)/3.0D0
+
+ TVISCXY=DBLE(NPART)*INTXY/(RHOSTAR*TSTAR)
+ TVISCXZ=DBLE(NPART)*INTXZ/(RHOSTAR*TSTAR)
+ TVISCYX=DBLE(NPART)*INTYX/(RHOSTAR*TSTAR)
+ TVISCYZ=DBLE(NPART)*INTYZ/(RHOSTAR*TSTAR)
+ TVISCZX=DBLE(NPART)*INTZX/(RHOSTAR*TSTAR)
+ TVISCZY=DBLE(NPART)*INTZY/(RHOSTAR*TSTAR)
+
+ TTVISC=(TVISCXY + TVISCXZ + TVISCYX + TVISCYZ + TVISCZX + TVISCZY)/6.0D0
+
+ RETURN
+END SUBROUTINE TVISC
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SUBROUTINE KVISC
+ USE VISVAR
+ IMPLICIT NONE 
+
+ DX=TIME(2)-TIME(1)
+ XYI0=KTXY(1) + KTXY(NDAT)                    !FOR XY INTEGRAL
+ XYI1=0.0D0
+ XYI2=0.0D0
+
+ XZI0=KTXZ(1) + KTXZ(NDAT)                    !FOR XZ INTEGRAL
+ XZI1=0.0D0
+ XZI2=0.0D0
+
+ YXI0=KTYX(1) + KTYX(NDAT)                    !FOR YX INTEGRAL
+ YXI1=0.0D0
+ YXI2=0.0D0
+
+ YZI0=KTYZ(1) + KTYZ(NDAT)                    !FOR YZ INTEGRAL
+ YZI1=0.0D0
+ YZI2=0.0D0
+
+ ZXI0=KTZX(1) + KTZX(NDAT)                    !FOR ZX INTEGRAL
+ ZXI1=0.0D0
+ ZXI2=0.0D0
+
+ ZYI0=KTZY(1) + KTZY(NDAT)                    !FOR ZY INTEGRAL
+ ZYI1=0.0D0
+ ZYI2=0.0D0
+
+ DO I=2,NDAT-2
+    IF(MOD(I,2) .EQ. 0)THEN
+      XYI1=XYI1 + KTXY(I)
+      XZI1=XZI1 + KTXZ(I)
+
+      YXI1=YXI1 + KTYX(I)
+      YZI1=YZI1 + KTYZ(I)
+
+      ZXI1=ZXI1 + KTZX(I)
+      ZYI1=ZYI1 + KTZY(I)
+    ELSE
+      XYI2=XYI2 + KTXY(I)
+      XZI2=XZI2 + KTXZ(I)
+
+      YXI2=YXI2 + KTYX(I)
+      YZI2=YZI2 + KTYZ(I)
+
+      ZXI2=ZXI2 + KTZX(I)
+      ZYI2=ZYI2 + KTZY(I)
+    ENDIF
+ ENDDO
+
+ INTXY=DX*(XYI0 + 2.0D0*XYI1 + 4.0D0*XYI2)/3.0D0
+ INTXZ=DX*(XZI0 + 2.0D0*XZI1 + 4.0D0*XZI2)/3.0D0
+
+ INTYX=DX*(YXI0 + 2.0D0*YXI1 + 4.0D0*YXI2)/3.0D0
+ INTYZ=DX*(YZI0 + 2.0D0*YZI1 + 4.0D0*YZI2)/3.0D0
+
+ INTZX=DX*(ZXI0 + 2.0D0*ZXI1 + 4.0D0*ZXI2)/3.0D0
+ INTZY=DX*(ZYI0 + 2.0D0*ZYI1 + 4.0D0*ZYI2)/3.0D0
+
+ KVISCXY=DBLE(NPART)*INTXY/(RHOSTAR*TSTAR)
+ KVISCXZ=DBLE(NPART)*INTXZ/(RHOSTAR*TSTAR)
+ KVISCYX=DBLE(NPART)*INTYX/(RHOSTAR*TSTAR)
+ KVISCYZ=DBLE(NPART)*INTYZ/(RHOSTAR*TSTAR)
+ KVISCZX=DBLE(NPART)*INTZX/(RHOSTAR*TSTAR)
+ KVISCZY=DBLE(NPART)*INTZY/(RHOSTAR*TSTAR)
+
+ KKVISC=(KVISCXY + KVISCXZ + KVISCYX + KVISCYZ + KVISCZX + KVISCZY)/6.0D0
+ RETURN
+END SUBROUTINE KVISC
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SUBROUTINE PVISC
+ USE VISVAR
+ IMPLICIT NONE 
+
+ DX=TIME(2)-TIME(1)
+ XYI0=PTXY(1) + PTXY(NDAT)                    !FOR XY INTEGRAL
+ XYI1=0.0D0
+ XYI2=0.0D0
+
+ XZI0=PTXZ(1) + PTXZ(NDAT)                    !FOR XZ INTEGRAL
+ XZI1=0.0D0
+ XZI2=0.0D0
+
+ YXI0=PTYX(1) + PTYX(NDAT)                    !FOR YX INTEGRAL
+ YXI1=0.0D0
+ YXI2=0.0D0
+
+ YZI0=PTYZ(1) + PTYZ(NDAT)                    !FOR YZ INTEGRAL
+ YZI1=0.0D0
+ YZI2=0.0D0
+
+ ZXI0=PTZX(1) + PTZX(NDAT)                    !FOR ZX INTEGRAL
+ ZXI1=0.0D0
+ ZXI2=0.0D0
+
+ ZYI0=PTZY(1) + PTZY(NDAT)                    !FOR ZY INTEGRAL
+ ZYI1=0.0D0
+ ZYI2=0.0D0
+
+ DO I=2,NDAT-2
+    IF(MOD(I,2) .EQ. 0)THEN
+      XYI1=XYI1 + PTXY(I)
+      XZI1=XZI1 + PTXZ(I)
+
+      YXI1=YXI1 + PTYX(I)
+      YZI1=YZI1 + PTYZ(I)
+
+      ZXI1=ZXI1 + PTZX(I)
+      ZYI1=ZYI1 + PTZY(I)
+    ELSE
+      XYI2=XYI2 + PTXY(I)
+      XZI2=XZI2 + PTXZ(I)
+
+      YXI2=YXI2 + PTYX(I)
+      YZI2=YZI2 + PTYZ(I)
+
+      ZXI2=ZXI2 + PTZX(I)
+      ZYI2=ZYI2 + PTZY(I)
+    ENDIF
+ ENDDO
+
+ INTXY=DX*(XYI0 + 2.0D0*XYI1 + 4.0D0*XYI2)/3.0D0
+ INTXZ=DX*(XZI0 + 2.0D0*XZI1 + 4.0D0*XZI2)/3.0D0
+
+ INTYX=DX*(YXI0 + 2.0D0*YXI1 + 4.0D0*YXI2)/3.0D0
+ INTYZ=DX*(YZI0 + 2.0D0*YZI1 + 4.0D0*YZI2)/3.0D0
+
+ INTZX=DX*(ZXI0 + 2.0D0*ZXI1 + 4.0D0*ZXI2)/3.0D0
+ INTZY=DX*(ZYI0 + 2.0D0*ZYI1 + 4.0D0*ZYI2)/3.0D0
+
+ PVISCXY=DBLE(NPART)*INTXY/(RHOSTAR*TSTAR)
+ PVISCXZ=DBLE(NPART)*INTXZ/(RHOSTAR*TSTAR)
+ PVISCYX=DBLE(NPART)*INTYX/(RHOSTAR*TSTAR)
+ PVISCYZ=DBLE(NPART)*INTYZ/(RHOSTAR*TSTAR)
+ PVISCZX=DBLE(NPART)*INTZX/(RHOSTAR*TSTAR)
+ PVISCZY=DBLE(NPART)*INTZY/(RHOSTAR*TSTAR)
+
+ PPVISC=(PVISCXY + PVISCXZ + PVISCYX + PVISCYZ + PVISCZX + PVISCZY)/6.0D0
+ RETURN
+END SUBROUTINE PVISC
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+SUBROUTINE KPVISC
+ USE VISVAR
+ IMPLICIT NONE 
+
+ DX=TIME(2)-TIME(1)
+ XYI0=KPTXY(1) + KPTXY(NDAT)                    !FOR XY INTEGRAL
+ XYI1=0.0D0
+ XYI2=0.0D0
+
+ XZI0=KPTXZ(1) + KPTXZ(NDAT)                    !FOR XZ INTEGRAL
+ XZI1=0.0D0
+ XZI2=0.0D0
+
+ YXI0=KPTYX(1) + KPTYX(NDAT)                    !FOR YX INTEGRAL
+ YXI1=0.0D0
+ YXI2=0.0D0
+
+ YZI0=KPTYZ(1) + KPTYZ(NDAT)                    !FOR YZ INTEGRAL
+ YZI1=0.0D0
+ YZI2=0.0D0
+
+ ZXI0=KPTZX(1) + KPTZX(NDAT)                    !FOR ZX INTEGRAL
+ ZXI1=0.0D0
+ ZXI2=0.0D0
+
+ ZYI0=KPTZY(1) + KPTZY(NDAT)                    !FOR ZY INTEGRAL
+ ZYI1=0.0D0
+ ZYI2=0.0D0
+
+ DO I=2,NDAT-2
+    IF(MOD(I,2) .EQ. 0)THEN
+      XYI1=XYI1 + KPTXY(I)
+      XZI1=XZI1 + KPTXZ(I)
+
+      YXI1=YXI1 + KPTYX(I)
+      YZI1=YZI1 + KPTYZ(I)
+
+      ZXI1=ZXI1 + KPTZX(I)
+      ZYI1=ZYI1 + KPTZY(I)
+    ELSE
+      XYI2=XYI2 + KPTXY(I)
+      XZI2=XZI2 + KPTXZ(I)
+
+      YXI2=YXI2 + KPTYX(I)
+      YZI2=YZI2 + KPTYZ(I)
+
+      ZXI2=ZXI2 + KPTZX(I)
+      ZYI2=ZYI2 + KPTZY(I)
+    ENDIF
+ ENDDO
+
+ INTXY=DX*(XYI0 + 2.0D0*XYI1 + 4.0D0*XYI2)/3.0D0
+ INTXZ=DX*(XZI0 + 2.0D0*XZI1 + 4.0D0*XZI2)/3.0D0
+
+ INTYX=DX*(YXI0 + 2.0D0*YXI1 + 4.0D0*YXI2)/3.0D0
+ INTYZ=DX*(YZI0 + 2.0D0*YZI1 + 4.0D0*YZI2)/3.0D0
+
+ INTZX=DX*(ZXI0 + 2.0D0*ZXI1 + 4.0D0*ZXI2)/3.0D0
+ INTZY=DX*(ZYI0 + 2.0D0*ZYI1 + 4.0D0*ZYI2)/3.0D0
+
+ KPVISCXY=DBLE(NPART)*INTXY/(RHOSTAR*TSTAR)
+ KPVISCXZ=DBLE(NPART)*INTXZ/(RHOSTAR*TSTAR)
+ KPVISCYX=DBLE(NPART)*INTYX/(RHOSTAR*TSTAR)
+ KPVISCYZ=DBLE(NPART)*INTYZ/(RHOSTAR*TSTAR)
+ KPVISCZX=DBLE(NPART)*INTZX/(RHOSTAR*TSTAR)
+ KPVISCZY=DBLE(NPART)*INTZY/(RHOSTAR*TSTAR)
+
+ KKPPVISC=(KPVISCXY + KPVISCXZ + KPVISCYX + KPVISCYZ + KPVISCZX + KPVISCZY)/6.0D0
+ RETURN
+END SUBROUTINE KPVISC
