@@ -36,3 +36,11 @@ the kynetic (KSSCF.dat), potential contribution (PSSCF.dat) and kynetic-potentia
 the instant components given in the files MDTend.dat, MDKtn.dat, MDPtn.dat with the
 total, kynetic and potential components, respectively. The number of samples within 
 the input files must be provided previously.
+
+
+Code: Viscocity.f90
+
+Description: Computes the shear-viscocity and its kynetic, potential and 
+kynetic-potential contributions using the corresponding autocorrelations functions
+given by total shear-stress (TSSCF.dat), kynetic (KSSCF.dat), potential (PSSCF.dat)
+and kynetic-potential functions (KPSSCF.dat)
