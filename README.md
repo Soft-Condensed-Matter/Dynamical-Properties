@@ -31,8 +31,8 @@ the program.
 Code: SSCF.f90
 
 Description: Determines the total shear-stress autocorrelation function (TSSCF.dat),
-the kynetic (KSSCF.dat), potential contribution (PSSCF.dat) and kynetic-potential 
-(KPSSCF.dat) contributions of the shear-stress autocorrelation. The program requeries
+the kynetic (KSSCF.dat), potential (PSSCF.dat) and kynetic-potential (KPSSCF.dat)
+contributions of the shear-stress autocorrelation. The program requeries
 the instant components given in the files MDTend.dat, MDKtn.dat, MDPtn.dat with the
 total, kynetic and potential components, respectively. The number of samples within 
 the input files must be provided previously.
@@ -53,6 +53,7 @@ same correlation of the diagonal tensor pressure component using the file with a
 the components of the tensor pressure given in the file MDTen.dat. The number of 
 samples within the input files must be provided previously.
 
+
 Code: BViscocity.f90
 
 Description: Determines the bulk viscocity from the autocorrelation function of 
@@ -60,3 +61,10 @@ the pressure fluctuation by means of the Green-Kubo relation and the longitudal
 viscocity using the fluctuation of the diagonal tensor pressure components. The
 program requieres the autoccorelation functions given in the files PFACF.dat and
 PFACaa.dat, respectively. 
+
+
+Code: EFACF.f90
+
+Description: Determines the energy flux (heat current) autocorrelation function 
+using its cartesian cartesian components contained in the file MDEfx.dat. 
+The number of samples must be previously provided.  
