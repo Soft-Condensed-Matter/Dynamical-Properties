@@ -1,6 +1,6 @@
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-!%%**  PROGRAM    MSD - MEAN SQUARE DISPLACEMENT                           **%%
+!%%**  PROGRAM    VACF - VELOCITY AUTOCORRELATION FUNCTION                 **%%
 !%%**  AUTHOR     ALEXIS TORRES CARBAJAL                                   **%%
 !%%**  LICENSE    LGPL-V3                                                  **%%
 !%%**  DATE       NOVEMBER 27, 2020                                        **%%
@@ -20,7 +20,7 @@
 !%%**             BOOK                                                     **%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-MODULE MSDVAR
+MODULE VACVAR
  IMPLICIT NONE
  INTEGER, PARAMETER:: D      = KIND(1.0D0)  !VARIABLES PRECISION 
  INTEGER, PARAMETER:: NPARTX = 3000         !MAXIMUM NUMBER OF PARTICLES 
@@ -41,16 +41,16 @@ MODULE MSDVAR
  REAL(D):: VX0(NPARTX,TMAXD),VY0(NPARTX,TMAXD)
  REAL(D):: VZ0(NPARTX,TMAXD),CTIME,DTIME,VACFT
  REAL(D):: VACFX(TMAXD),VACFY(TMAXD),VACFZ(TMAXD)
-END MODULE MSDVAR
+END MODULE VACVAR
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%   MAIN PROGRAM   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-PROGRAM MSD
- USE MSDVAR
+PROGRAM VACF
+ USE VACVAR
  IMPLICIT NONE
 
  OPEN(UNIT=10,FILE='MDVel.dat',STATUS='OLD')!FILE WITH COORDINATES
- OPEN(UNIT=11,FILE='VACF.dat')               !FILE WITH THE MSD COMPONENTS
+ OPEN(UNIT=11,FILE='VACF.dat')              !FILE WITH THE MSD COMPONENTS
  REWIND(10)
  
  NTEL=0                                     !NUMBER OF t=0 
@@ -114,4 +114,4 @@ PROGRAM MSD
  CLOSE(UNIT=11)
 
  STOP
-END PROGRAM MSD
+END PROGRAM VACF
