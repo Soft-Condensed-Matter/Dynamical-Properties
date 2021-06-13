@@ -68,3 +68,10 @@ Code: EFACF.f90
 Description: Determines the energy flux (heat current) autocorrelation function 
 using its cartesian cartesian components contained in the file MDEfx.dat. 
 The number of samples must be previously provided.  
+
+
+Code: Arrest.f90
+
+Description: Program to determine the dynamical arrest of a system using only 
+its static structure factor and volume fraction based on the gamma criterium 
+of the SCGLE theory of equilibrium [Phys. Rev. E; 76, 062502 (2007)] 
